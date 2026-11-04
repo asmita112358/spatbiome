@@ -9,3 +9,5 @@ License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
 Config/roxygen2/version: 8.1.0
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
+URL: https://github.com/asmita112358/spatbiome
+BugReports: https://github.com/asmita112358/spatbiome/issues
