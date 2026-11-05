@@ -1,16 +1,16 @@
 compute_Kcross <- function(X,
-                                base_taxa,
-                                shift_taxa,
-                                r,
-                                type = "inhom",
-                                correction = "isotropic",
-                                sigma_val = NULL) {
+                           base_taxa,
+                           shift_taxa,
+                           r,
+                           type = "inhom",
+                           correction = "isotropic",
+                           sigma_val = NULL) {
 
-  i <- as.character(base_taxa)
-  j <- as.character(shift_taxa)
+  i <- base::as.character(base_taxa)
+  j <- base::as.character(shift_taxa)
 
   if (type == "inhom") {
-    Kobj <- spatstat::Kcross.inhom(
+    Kobj <- spatstat.explore::Kcross.inhom(
       X = X,
       i = i,
       j = j,
@@ -19,7 +19,7 @@ compute_Kcross <- function(X,
       sigma = sigma_val
     )
   } else {
-    Kobj <- spatstat::Kcross(
+    Kobj <- spatstat.explore::Kcross(
       X = X,
       i = i,
       j = j,
@@ -40,8 +40,9 @@ compute_Kcross <- function(X,
     return(Kobj$border)
   }
 
-  stop("Unsupported correction: ", correction)
+  base::stop("Unsupported correction: ", correction)
 }
+
 
 compute_envelope_pval<- function(r, obs, sim_m, direction = "greater") {
 
@@ -221,3 +222,113 @@ one_area_permutation_attempt <- function(attempt_id,
   )
 }
 
+one_area_permutation_attempt <- function(attempt_id,
+                                         points_shift_original,
+                                         points_other_original,
+                                         original_window,
+                                         base_taxa,
+                                         shift_taxa,
+                                         r,
+                                         type,
+                                         correction,
+                                         sigma_val,
+                                         jump_radius) {
+  base_chr <- base::as.character(base_taxa)
+  shift_chr <- base::as.character(shift_taxa)
+  out <- base::list(valid = FALSE)
+
+  shift_vector <- spatstat.random::runifdisc(1, radius = jump_radius)
+  shift_x <- shift_vector$x
+  shift_y <- shift_vector$y
+
+  points_shifted <- base::tryCatch(
+    spatstat.geom::shift(
+      points_shift_original,
+      vec = c(shift_x, shift_y)
+    ),
+    error = function(e) NULL
+  )
+  if (base::is.null(points_shifted)) {
+    return(out)
+  }
+
+  window_shifted <- base::tryCatch(
+    spatstat.geom::shift(
+      original_window,
+      vec = c(shift_x, shift_y)
+    ),
+    error = function(e) NULL
+  )
+  if (base::is.null(window_shifted)) {
+    return(out)
+  }
+
+  window_reduced <- base::tryCatch(
+    spatstat.geom::intersect.owin(original_window, window_shifted),
+    error = function(e) NULL
+  )
+  if (base::is.null(window_reduced)) {
+    return(out)
+  }
+
+  reduced_area <- spatstat.geom::area.owin(window_reduced)
+  if (!base::is.finite(reduced_area) || reduced_area <= 0) {
+    return(out)
+  }
+
+  pp_combined <- base::tryCatch(
+    spatstat.geom::superimpose(
+      points_other_original,
+      points_shifted,
+      check = FALSE
+    ),
+    error = function(e) NULL
+  )
+  if (base::is.null(pp_combined)) {
+    return(out)
+  }
+
+  pp_reduced <- base::tryCatch(
+    pp_combined[window_reduced],
+    error = function(e) NULL
+  )
+  if (base::is.null(pp_reduced) ||
+      spatstat.geom::npoints(pp_reduced) == 0) {
+    return(out)
+  }
+
+  freq_vc <- base::table(spatstat.geom::marks(pp_reduced))
+  n_base_vc <- base::as.numeric(freq_vc[base_chr])
+  n_shift_vc <- base::as.numeric(freq_vc[shift_chr])
+
+  if (base::is.na(n_base_vc) || base::is.na(n_shift_vc) ||
+      n_base_vc == 0 || n_shift_vc == 0) {
+    return(out)
+  }
+
+  K_uncorr <- base::tryCatch(
+    compute_Kcross(
+      X = pp_reduced,
+      base_taxa = base_taxa,
+      shift_taxa = shift_taxa,
+      r = r,
+      type = type,
+      correction = correction,
+      sigma_val = sigma_val
+    ),
+    error = function(e) NULL
+  )
+
+  if (base::is.null(K_uncorr) ||
+      base::length(K_uncorr) != base::length(r) ||
+      base::any(!base::is.finite(K_uncorr))) {
+    return(out)
+  }
+
+  base::list(
+    valid = TRUE,
+    K_uncorr = K_uncorr,
+    area_shift = reduced_area,
+    shift_vector = c(shift_x, shift_y)
+  )
+}
