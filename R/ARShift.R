@@ -23,11 +23,19 @@
 #' \item{k}{ratio of number of attempted permutations and number of required permutations.}
 #' @author Asmita Roy
 #' @export
-ARShift <- function(data, i, j, r, rmax = NULL, correction, n_perm = 999, k = 1.1,
+ARShift <- function(data, i, j, r = NULL, rmax = NULL, correction, n_perm = 999, k = 1.1,
                     type = "hom", sigma_val = NULL, lite = FALSE, thin_prob = 0.5, jump_radius = NULL,
-                    workers = 1){
+                    workers = 1, verbose = FALSE){
+  log_progress <- function(...) {
+    if (isTRUE(verbose)) {
+      message(...)
+    }
+  }
+
+  log_progress("ARShift: starting.")
   ##Set parameters
   if (lite) {
+    log_progress("ARShift: thinning input data.")
     data <- rthin(data, thin_prob)
   }
 
@@ -37,6 +45,10 @@ ARShift <- function(data, i, j, r, rmax = NULL, correction, n_perm = 999, k = 1.
   if (is.null(r)) {
     rmax <- 0.3 * incircle(original_window)$r
     r <- seq(0, rmax, length.out = 50)
+    log_progress(
+      "ARShift: using automatically selected r range from 0 to ",
+      signif(rmax, 4), " (", length(r), " values)."
+    )
   }
 
   n_dist <- length(r)
@@ -50,6 +62,7 @@ ARShift <- function(data, i, j, r, rmax = NULL, correction, n_perm = 999, k = 1.
 
   #Data check
   if (is.na(n_base) || is.na(n_shift) || n_base == 0 || n_shift == 0) {
+    log_progress("ARShift: one or both requested marks are absent; stopping.")
     return(list(K_fun =  NA_real_, r = r, n_valid = 0, n_attempts = 0, k = k))
   }
 
@@ -59,14 +72,14 @@ ARShift <- function(data, i, j, r, rmax = NULL, correction, n_perm = 999, k = 1.
     jump_radius <- incircle(original_window)$r
   }
 
-  sigma_val <- NULL
-  if (type == "inhom") {
-    if(is.null(sigma_val)){
-      sigma_val <- bw.CvL(data)
-    }
-   }
+
+  if (type == "inhom" && is.null(sigma_val)) {
+    log_progress("ARShift: estimating intensity bandwidth.")
+    sigma_val <- bw.CvL(data)
+  }
 
   #Compute Kcross for original data
+  log_progress("ARShift: computing observed Kcross.")
   obs_Kcross <- compute_Kcross(
     X = data,
     base_taxa = base_chr,
@@ -81,6 +94,10 @@ ARShift <- function(data, i, j, r, rmax = NULL, correction, n_perm = 999, k = 1.
   points_other_original <- subset(data, marks(data) != shift_chr)
 
   n_attempts <- ceiling(n_perm * k)
+  log_progress(
+    "ARShift: running ", n_attempts, " shift attempts using ",
+    workers, if (workers == 1) " worker." else " workers."
+  )
   attempt_results <- safe_pmclapply(
     X = seq_len(n_attempts),
     FUN = one_area_permutation_attempt,
@@ -97,8 +114,15 @@ ARShift <- function(data, i, j, r, rmax = NULL, correction, n_perm = 999, k = 1.
     jump_radius = jump_radius
   )
 
-  valid_results <- Filter(function(z) isTRUE(z$valid), attempt_results)
+ valid_results <- Filter(
+    function(z) is.list(z) && isTRUE(z$valid),
+    attempt_results
+  )
   n_valid_total <- length(valid_results)
+  log_progress(
+    "ARShift: ", n_valid_total, " of ", n_attempts,
+    " shift attempts were valid."
+  )
 
   if (n_valid_total < n_perm) {
     warning(
@@ -127,21 +151,21 @@ ARShift <- function(data, i, j, r, rmax = NULL, correction, n_perm = 999, k = 1.
     Kcross_uncorr[, b] <- valid_results[[b]]$K_uncorr
     area_shift[b] <- valid_results[[b]]$area_shift
   }
-
+  log_progress("ARShift: computing T and envelope p-value.")
   meanK <- rowMeans(Kcross_uncorr, na.rm = TRUE)
   T_0 <- sqrt(win_area) * (obs_Kcross - meanK)
   T_sim <- Kcross_uncorr - meanK
   T_scaled <- sweep(T_sim, 2, sqrt(area_shift), "*")
 
-  pval_Kcross_area <- compute_envelope_pval_fast(
+  pval_Kcross_area <- compute_envelope_pval(
     r = r,
     obs = T_0,
     sim_m = T_scaled
   )
-
+  log_progress("ARShift: finished.")
   list(
     pval_Kcross_area = pval_Kcross_area,
-    obs_K = obs_Kcross,
+    K_fun = obs_Kcross,
     n_valid = n_keep,
     n_valid_total = n_valid_total,
     n_attempts = n_attempts,
