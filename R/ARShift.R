@@ -81,15 +81,18 @@ ARShift <- function(data, i, j, r = NULL, rmax = NULL, correction = "isotropic",
   original_window <- spatstat.geom::Window(data)
   win_area <- spatstat.geom::area.owin(original_window)
 
-  if (base::is.null(r)) {
+  if (base::is.null(rmax) && base::is.null(r)) {
     rmax <- 0.3 * spatstat.geom::incircle(original_window)$r
     r <- base::seq(0, rmax, length.out = 50)
-
-    log_progress(
-      "ARShift: using automatically selected r range from 0 to ",
-      base::signif(rmax, 4), " (", base::length(r), " values)."
-    )
+  }else if(base::is.null(rmax) && !base::is.null(r)) {
+    rmax <- base::max(r)
+  }else if(!base::is.null(rmax) && base::is.null(r)){
+    r <- base::seq(0, rmax, length.out = 50)
+  }else{
+    #check whether max(r) conflicts with rmax
+    if(base::max(r) > rmax){stop("ARShift: max(r) is greater than rmax. Please check your inputs.")}
   }
+
 
   base_chr <- base::as.character(i)
   shift_chr <- base::as.character(j)
