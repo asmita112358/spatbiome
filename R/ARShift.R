@@ -1,4 +1,7 @@
-#' Function to implement ARShift
+#' Tests whether two types of points co-cluster
+#'
+#' Function to implement Area-adjusted Random Shift (ARShift), a non-paramteric test to assess co-clustering of two point patterns. The test is based on the bivariate K-function and uses random shifts of one of the point patterns to generate a null distribution. The test is implemented in a parallelized manner for efficiency.
+#' As with bivariate Ripley's K-function, ARShift is directional. ARShift tests whether taxa/cell-type j co-clusters with taxa/cell-type i. This may be different from the co-clustering pattern of taxa/cell-type i with taxa/cell-type j. Therefore, it is recommended to run ARShift based on the scientific hypothesis of interest.
 #'
 #' @param data The observed point process pattern on which the test will be applied. It must be a multitype point pattern where marks are factor.
 #' @param i The type of points(mark) in data which stays fixed. Should be input as a character string.
@@ -11,21 +14,20 @@
 #' @param k factor by which number of permutations is increased. Defaults to 1.2. For sparse processes k can be increased.
 #' @param type The type of K-function to compute, homogneous or inhomogeneous. Can be "hom" or "inhom". Defaults to homogeneous K.
 #' @param sigma_val Bandwidth for evaluating inhomogeneous intensity in the inhomogeneous K. has a sensible default.
-#' @param lite logical, indicating whether the point process should be randomly thinned for very large datasets. Recommended only for very large datasets. Deafults to \code{FALSE}.
-#' @param thin_prob numeric scalar between 0 and 1, indicating the thinning probability. Defaults to 0.5.
+#' @param lite logical, indicating whether the point process should be randomly thinned for efficiency. Recommended only for very large datasets. Deafults to \code{FALSE}.
+#' @param thin_prob numeric scalar between 0 and 1, indicating the thinning probability. Defaults to 0.5. Ignored if \code{lite = FALSE}.
 #' @param jump_radius Radius of the uniform disc from which the random shift vector is sampled. There is a sensible default.
 #' @param verbose Logical, indicating whether to print progress messages. Defaults to \code{FALSE}.
 #' @param workers Number of cores to be used in case of parallel computation. Defaults to 1, serial computation.
 #'
 #' @return A list containing:
 #' \describe{
-#'   \item{pval_Kcross_area}{P-value for the ARShift test.}
-#'   \item{K_fun}{Observed bivariate K function.}
+#'   \item{p}{P-value for the area adjusted random shift test.}
+#'   \item{K}{Observed bivariate K-function.}
 #'   \item{r}{Radii at which the K-function was evaluated.}
-#'   \item{n_valid}{Number of valid random shift attempts used.}
-#'   \item{n_valid_total}{Total number of valid shift attempts.}
-#'   \item{n_attempts}{Total number of shift attempts made.}
-#'   \item{k}{Ratio used to determine the number of attempts.}
+#'   \item{n_attempts}{Total number of shift attempts made. This is equal to \code{ceiling(n_perm * k)}.}
+#'   \item{n_valid}{Number of valid random shift attempts. If this is less than \code{n_perm}, increase \code{k} in the function input.}
+#'   \item{n_perm}{Targeted number of random shifts.}
 #' }
 #' @examples
 #' win <- spatstat.geom::square(1)
@@ -100,11 +102,13 @@ ARShift <- function(data, i, j, r = NULL, rmax = NULL, correction = "isotropic",
       n_base == 0 || n_shift == 0) {
     log_progress("ARShift: one or both requested marks are absent; stopping.")
     return(base::list(
-      K_fun = NA_real_,
+      p = NA_real_,
+      K = NA_real_,
       r = r,
-      n_valid = 0,
       n_attempts = 0,
-      k = k
+      n_valid = 0,
+      n_perm = n_perm
+
     ))
   }
 
@@ -183,13 +187,14 @@ ARShift <- function(data, i, j, r = NULL, rmax = NULL, correction = "isotropic",
 
   if (n_keep == 0L) {
     return(base::list(
-      pval_Kcross_area = NA_real_,
-      n_valid = 0L,
-      n_valid_total = n_valid_total,
+      p = NA_real_,
+      K = obs_Kcross,
+      r = r,
       n_attempts = n_attempts,
-      k = k,
-      r = r
-    ))
+      n_valid = n_valid_total,
+      n_perm = n_perm
+
+      ))
   }
 
   valid_results <- valid_results[base::seq_len(n_keep)]
@@ -221,12 +226,11 @@ ARShift <- function(data, i, j, r = NULL, rmax = NULL, correction = "isotropic",
   log_progress("ARShift: finished.")
 
   base::list(
-    pval_Kcross_area = pval_Kcross_area,
-    K_fun = obs_Kcross,
-    n_valid = n_keep,
-    n_valid_total = n_valid_total,
+    p = pval_Kcross_area,
+    K = obs_Kcross,
+    r = r,
     n_attempts = n_attempts,
-    k = k,
-    r = r
+    n_valid = n_valid_total,
+    n_perm = n_perm
   )
 }

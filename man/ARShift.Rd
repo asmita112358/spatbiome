@@ -2,7 +2,7 @@
 % Please edit documentation in R/ARShift.R
 \name{ARShift}
 \alias{ARShift}
-\title{Function to implement ARShift}
+\title{Tests whether two types of points co-cluster}
 \usage{
 ARShift(
   data,
@@ -44,9 +44,9 @@ Available options are "isotropic", "translate", "translation" and "border". For 
 
 \item{sigma_val}{Bandwidth for evaluating inhomogeneous intensity in the inhomogeneous K. has a sensible default.}
 
-\item{lite}{logical, indicating whether the point process should be randomly thinned for very large datasets. Recommended only for very large datasets. Deafults to \code{FALSE}.}
+\item{lite}{logical, indicating whether the point process should be randomly thinned for efficiency. Recommended only for very large datasets. Deafults to \code{FALSE}.}
 
-\item{thin_prob}{numeric scalar between 0 and 1, indicating the thinning probability. Defaults to 0.5.}
+\item{thin_prob}{numeric scalar between 0 and 1, indicating the thinning probability. Defaults to 0.5. Ignored if \code{lite = FALSE}.}
 
 \item{jump_radius}{Radius of the uniform disc from which the random shift vector is sampled. There is a sensible default.}
 
@@ -57,17 +57,17 @@ Available options are "isotropic", "translate", "translation" and "border". For 
 \value{
 A list containing:
 \describe{
-\item{pval_Kcross_area}{P-value for the ARShift test.}
-\item{K_fun}{Observed bivariate K function.}
+\item{p}{P-value for the area adjusted random shift test.}
+\item{K}{Observed bivariate K-function.}
 \item{r}{Radii at which the K-function was evaluated.}
-\item{n_valid}{Number of valid random shift attempts used.}
-\item{n_valid_total}{Total number of valid shift attempts.}
-\item{n_attempts}{Total number of shift attempts made.}
-\item{k}{Ratio used to determine the number of attempts.}
+\item{n_attempts}{Total number of shift attempts made. This is equal to \code{ceiling(n_perm * k)}.}
+\item{n_valid}{Number of valid random shift attempts. If this is less than \code{n_perm}, increase \code{k} in the function input.}
+\item{n_perm}{Targeted number of random shifts.}
 }
 }
 \description{
-Function to implement ARShift
+Function to implement Area-adjusted Random Shift (ARShift), a non-paramteric test to assess co-clustering of two point patterns. The test is based on the bivariate K-function and uses random shifts of one of the point patterns to generate a null distribution. The test is implemented in a parallelized manner for efficiency.
+As with bivariate Ripley's K-function, ARShift is directional. ARShift tests whether taxa/cell-type j co-clusters with taxa/cell-type i. This may be different from the co-clustering pattern of taxa/cell-type i with taxa/cell-type j. Therefore, it is recommended to run ARShift based on the scientific hypothesis of interest.
 }
 \examples{
 win <- spatstat.geom::square(1)
