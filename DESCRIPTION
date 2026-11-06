@@ -1,9 +1,9 @@
 Package: spatbiome
-Title: A nonparametric test for co-clustering in spatial microbiome data
-Version: 0.0.0.9000
+Title: A Nonparametric Test for Co-Clustering in Spatial Microbiome Data
+Version: 0.1.0
 Authors@R:
     person("Asmita", "Roy", , "aroy38@jh.edu", role = c("aut", "cre"))
-Description: Implements Area-adjusted Random Shift (ARShift), a non-parametric test to assess co-clustering of two point patterns. The two point processes are assumed to be independently superimposed under the null hypothesis. The test is based on Ripley's bivariate K-function and uses random shifts of one of the point patterns to generate a null distribution. An area-adjusted scale factor stabilises the variance across random shifts.
+Description: Implements Area-adjusted Random Shift, a non-parametric test to assess co-clustering of two point patterns. The two point processes are assumed to be independently superimposed under the null hypothesis. The test is based on Ripley's bivariate K-function and uses random shifts of one of the point patterns to generate a null distribution. An area-adjusted scale factor stabilises the variance across random shifts.
 Imports:
     GET,
     future,
