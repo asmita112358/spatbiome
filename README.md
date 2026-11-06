@@ -16,12 +16,11 @@ You can install the development version of spatbiome from
 
 # Install a package from GitHub
 pak::pak("asmita112358/spatbiome")
-#> ✔ Updated metadata database: 7.33 MB in 14 files.
-#> ℹ Updating metadata database✔ Updating metadata database ... done
+#> ℹ Loading metadata database✔ Loading metadata database ... done
 #>  
 #> → Package library at '/Library/Frameworks/R.framework/Versions/4.6/Resources/library'.
 #> ℹ No downloads are needed
-#> ✔ 1 pkg + 40 deps: kept 40 [9.8s]
+#> ✔ 1 pkg + 40 deps: kept 40 [4.5s]
 ```
 
 ## Generate data
@@ -39,7 +38,7 @@ generate_LGCP <- function(win, corrfun = "exponential",mu = 5, scale = 0.1, depe
     data2 <- spatstat.random::rLGCP(corrfun, mu = mu, win = win, scale = scale, var = 1)
   } else {
     data2 <- data1
-    runif_sh <- spatstat.random::runifdisc(data1$n, radius = 0.2)
+    runif_sh <- spatstat.random::runifdisc(data1$n, radius = 0.1)
     data2$x <- data1$x + runif_sh$x
     data2$y <- data1$y + runif_sh$y
 
@@ -64,8 +63,13 @@ for two independent Log Gaussian point processes. The null hypothesis is
 that the two point patterns are independent.
 
 ``` r
+library(ggplot2)
 X <- generate_LGCP(win = spatstat.geom::owin(c(0, 1), c(0, 1)), corrfun = "exponential", mu = 5, scale = 0.1, dependant = FALSE)
-plot(X, main = "Simulated independent LGCP")
+plot_X <- data.frame(X)
+ggplot(plot_X, aes(x = x, y = y, color = marks)) + 
+  geom_point() +
+  labs(title = "Simulated independent LGCP", x = "X coordinate", y = "Y coordinate", color = "Point Type") +
+  theme_minimal()
 ```
 
 <img src="man/figures/README-unnamed-chunk-3-1.png" alt="" width="100%" />
@@ -74,19 +78,19 @@ plot(X, main = "Simulated independent LGCP")
 res <- ARShift(data = X, i = "1", j = "2", n_perm = 499, workers = 5, type = "hom")
 res
 #> $p
-#> [1] 0.978
+#> [1] 0.734
 #> 
 #> $K
-#>  [1] 0.000000e+00 0.000000e+00 4.638219e-05 1.391466e-04 3.555968e-04
-#>  [6] 6.388793e-04 8.576736e-04 1.107047e-03 1.693899e-03 2.107979e-03
-#> [11] 2.477456e-03 2.902251e-03 3.619701e-03 4.614773e-03 5.423976e-03
-#> [16] 6.197026e-03 7.171567e-03 8.081193e-03 8.800024e-03 9.950374e-03
-#> [21] 1.094189e-02 1.208581e-02 1.328100e-02 1.446550e-02 1.622188e-02
-#> [26] 1.743779e-02 1.906610e-02 2.040570e-02 2.194648e-02 2.384951e-02
-#> [31] 2.574690e-02 2.765557e-02 2.969256e-02 3.150141e-02 3.313605e-02
-#> [36] 3.513753e-02 3.738270e-02 3.940355e-02 4.144544e-02 4.332919e-02
-#> [41] 4.520679e-02 4.774279e-02 4.974814e-02 5.257372e-02 5.472340e-02
-#> [46] 5.754131e-02 6.007532e-02 6.245702e-02 6.507961e-02 6.764358e-02
+#>  [1] 0.0000000000 0.0000000000 0.0001598465 0.0002397698 0.0003196931
+#>  [6] 0.0005861040 0.0009057971 0.0012431177 0.0018178701 0.0022263173
+#> [11] 0.0028287516 0.0033405012 0.0037607092 0.0044685066 0.0051111127
+#> [16] 0.0058117311 0.0067692398 0.0076091569 0.0085567557 0.0098494532
+#> [21] 0.0107741500 0.0119637650 0.0133247823 0.0148594433 0.0163486824
+#> [26] 0.0177488920 0.0190152092 0.0204699008 0.0219333402 0.0238452746
+#> [31] 0.0256291224 0.0278174352 0.0299507035 0.0319338691 0.0338163745
+#> [36] 0.0355390238 0.0376603552 0.0395596056 0.0418380610 0.0449112985
+#> [41] 0.0472506869 0.0500893856 0.0524900363 0.0550074434 0.0578975107
+#> [46] 0.0614293714 0.0642734868 0.0672939882 0.0701635457 0.0732117117
 #> 
 #> $r
 #>  [1] 0.000000000 0.003061224 0.006122449 0.009183673 0.012244898 0.015306122
@@ -116,7 +120,11 @@ association between point types.
 
 ``` r
 X <- generate_LGCP(win = spatstat.geom::owin(c(0, 1), c(0, 1)), corrfun = "exponential", mu = 5, scale = 0.1, dependant = TRUE)
-plot(X, main = "Simulated dependent LGCP")
+plot_X <- data.frame(X)
+ggplot(plot_X, aes(x = x, y = y, color = marks)) + 
+  geom_point() +
+  labs(title = "Simulated dependent LGCP", x = "X coordinate", y = "Y coordinate", color = "Point Type") +
+  theme_minimal()
 ```
 
 <img src="man/figures/README-unnamed-chunk-5-1.png" alt="" width="100%" />
@@ -125,19 +133,19 @@ plot(X, main = "Simulated dependent LGCP")
 res <- ARShift(data = X, i = "1", j = "2", n_perm = 499, workers = 5, type = "hom")
 res
 #> $p
-#> [1] 0.002
+#> [1] 0.008
 #> 
 #> $K
-#>  [1] 0.0000000000 0.0001747030 0.0003105831 0.0006211662 0.0009511608
-#>  [6] 0.0014752698 0.0020724307 0.0026935970 0.0033924090 0.0043004212
-#> [11] 0.0053680507 0.0066880290 0.0080801185 0.0093029635 0.0104311789
-#> [16] 0.0119153516 0.0131553170 0.0151246590 0.0166368232 0.0183234268
-#> [21] 0.0200989223 0.0222146912 0.0244851611 0.0265865302 0.0287634592
-#> [26] 0.0310283010 0.0338795159 0.0367619803 0.0393546887 0.0417828531
-#> [31] 0.0447244058 0.0479815226 0.0507638352 0.0535794006 0.0571314807
-#> [36] 0.0603820265 0.0635348447 0.0672794404 0.0705643397 0.0741141128
-#> [41] 0.0775584261 0.0813193541 0.0852693537 0.0887232375 0.0926399377
-#> [46] 0.0965988340 0.1009346834 0.1051919224 0.1094183366 0.1134878228
+#>  [1] 0.000000e+00 7.410701e-05 2.964280e-04 3.705351e-04 5.558026e-04
+#>  [6] 8.522306e-04 1.259819e-03 1.963836e-03 2.651382e-03 3.402544e-03
+#> [11] 4.342162e-03 5.564305e-03 6.753510e-03 8.169117e-03 9.314459e-03
+#> [16] 1.040607e-02 1.187087e-02 1.332239e-02 1.473571e-02 1.569910e-02
+#> [21] 1.761700e-02 1.946405e-02 2.117340e-02 2.264205e-02 2.442902e-02
+#> [26] 2.666466e-02 2.882016e-02 3.055601e-02 3.269732e-02 3.498960e-02
+#> [31] 3.749778e-02 3.993395e-02 4.265239e-02 4.499247e-02 4.724654e-02
+#> [36] 4.922195e-02 5.144335e-02 5.376509e-02 5.688665e-02 5.951856e-02
+#> [41] 6.239257e-02 6.501051e-02 6.788052e-02 7.026818e-02 7.312592e-02
+#> [46] 7.728439e-02 8.015372e-02 8.350443e-02 8.667021e-02 8.987049e-02
 #> 
 #> $r
 #>  [1] 0.000000000 0.003061224 0.006122449 0.009183673 0.012244898 0.015306122
