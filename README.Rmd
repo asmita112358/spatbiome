@@ -81,7 +81,7 @@ res
 
 ```
 
-## Example 2. Null hypothesis: dependent point patterns
+## Example 2. Alternative hypothesis: co-clustering point patterns
 
 Here, points of type 2 are placed close to points of type 1 to mimic association between point types.
 
