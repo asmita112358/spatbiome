@@ -81,7 +81,7 @@ ggplot(plot_X, aes(x = x, y = y, color = marks)) +
   labs(title = "Simulated independent LGCP", x = "X coordinate", y = "Y coordinate", color = "Point Type") +
   theme_minimal()
 ```
-
+Change the number of workers according to the number of cores available in your machine.
 ```{r}
 res <- ARShift(data = X, i = "1", j = "2", n_perm = 499, workers = 5, type = "hom")
 res
