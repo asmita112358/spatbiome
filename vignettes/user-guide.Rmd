@@ -24,16 +24,17 @@ A collection of functions for spatial analysis of microbiome data. Currently con
 
 You can install the development version of spatbiome from [GitHub](https://github.com/) with:
 
-```{r}
+```{r,eval = FALSE}
 
 # Install a package from GitHub
 pak::pak("asmita112358/spatbiome")
-library(spatbiome)
+
 ```
 ## Data generating functions and simulation scripts
 
 The package includes the data-generating functions in scripts/datagen.R. To locate this script and the results_in_paper directory in your installed copy of spatbiome, run
 ```{r}
+library(spatbiome)
 system.file("results_in_paper", package = "spatbiome")
 system.file("scripts", package = "spatbiome")
 ```

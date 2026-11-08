@@ -22,10 +22,9 @@ A collection of functions for spatial analysis of microbiome data. Currently con
 You can install the development version of spatbiome from [GitHub](https://github.com/) with:
 
 ```{r}
-
-# Install a package from GitHub
 pak::pak("asmita112358/spatbiome")
 library(spatbiome)
+browseVignettes("spatbiome")
 ```
 ## Data generating functions and simulation scripts
 

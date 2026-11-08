@@ -13,6 +13,7 @@ Imports:
     spatstat.geom,
     spatstat.random
 Suggests:
+    ggplot2,
     knitr,
     rmarkdown
 VignetteBuilder: knitr
