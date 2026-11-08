@@ -1,6 +1,10 @@
 ---
-title: "user-guide"
-output: html_document
+title: "spatbiome: User Guide"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{spatbiome: User Guide}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r, include = FALSE}
