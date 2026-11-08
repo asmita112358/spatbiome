@@ -12,6 +12,10 @@ Imports:
     spatstat.explore,
     spatstat.geom,
     spatstat.random
+Suggests:
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
 License: AGPL (>= 3)
 Config/roxygen2/version: 8.1.0
 Encoding: UTF-8
