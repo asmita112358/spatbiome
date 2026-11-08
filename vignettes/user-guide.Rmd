@@ -1,0 +1,109 @@
+---
+title: "user-guide"
+output: html_document
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "70%"
+)
+```
+
+# spatbiome
+
+A collection of functions for spatial analysis of microbiome data. Currently contains ARShift, a random shift test for bivariate point patterns. 
+
+## Installation
+
+You can install the development version of spatbiome from [GitHub](https://github.com/) with:
+
+```{r}
+
+# Install a package from GitHub
+pak::pak("asmita112358/spatbiome")
+library(spatbiome)
+```
+## Data generating functions and simulation scripts
+
+The package includes the data-generating functions in scripts/datagen.R. To locate this script and the results_in_paper directory in your installed copy of spatbiome, run
+```{r}
+system.file("results_in_paper", package = "spatbiome")
+system.file("scripts", package = "spatbiome")
+```
+These commands return the full paths to the files and directory. Open datagen.R in RStudio with:
+```{r,eval = FALSE}
+file.edit(system.file("scripts", "datagen.R", package = "spatbiome"))
+```
+An example data generating function is provided below. The function `generate_LGCP` generates two Log Gaussian Cox Processes (LGCPs) in a specified window. The user can choose to generate independent point patterns or dependent point patterns where points of type 2 are placed close to points of type 1.
+```{r example}
+generate_LGCP <- function(win, corrfun = "exponential",mu = 5, scale = 0.1, dependant = FALSE){
+
+  data1 <- spatstat.random::rLGCP(corrfun, mu = mu, win = win, scale = scale, var = 1)
+
+  if(dependant == FALSE){
+    data2 <- spatstat.random::rLGCP(corrfun, mu = mu, win = win, scale = scale, var = 1)
+  } else {
+    data2 <- data1
+    runif_sh <- spatstat.random::runifdisc(data1$n, radius = 0.1)
+    data2$x <- data1$x + runif_sh$x
+    data2$y <- data1$y + runif_sh$y
+
+    keep <- spatstat.geom::inside.owin(data2$x, data2$y, win)
+    data2 <- data2[keep]
+  }
+
+  spatstat.geom::marks(data1) <- factor(rep(1, spatstat.geom::npoints(data1)), levels = c(1, 2))
+  spatstat.geom::marks(data2) <- factor(rep(2, spatstat.geom::npoints(data2)), levels = c(1, 2))
+
+  data_all <- spatstat.geom::superimpose(data1, data2, W = win)
+  spatstat.geom::marks(data_all) <- factor(spatstat.geom::marks(data_all), levels = c(1, 2))
+
+  return(data_all)
+}
+
+
+
+```
+## Example 1. Null hypothesis: independent point patterns
+
+This is a basic example which demonstrates the implementation of ARShift for two independent Log Gaussian point processes. The null hypothesis is that the two point patterns are independent.
+
+
+
+```{r}
+library(ggplot2)
+X <- generate_LGCP(win = spatstat.geom::owin(c(0, 1), c(0, 1)), corrfun = "exponential", mu = 5, scale = 0.1, dependant = FALSE)
+plot_X <- data.frame(X)
+ggplot(plot_X, aes(x = x, y = y, color = marks)) + 
+  geom_point() +
+  labs(title = "Simulated independent LGCP", x = "X coordinate", y = "Y coordinate", color = "Point Type") +
+  theme_minimal()
+```
+
+```{r}
+res <- ARShift(data = X, i = "1", j = "2", n_perm = 499, workers = 5, type = "hom")
+res
+
+```
+
+## Example 2. Alternative hypothesis: co-clustering point patterns
+
+Here, points of type 2 are placed close to points of type 1 to mimic association between point types.
+
+```{r}
+X <- generate_LGCP(win = spatstat.geom::owin(c(0, 1), c(0, 1)), corrfun = "exponential", mu = 5, scale = 0.1, dependant = TRUE)
+plot_X <- data.frame(X)
+ggplot(plot_X, aes(x = x, y = y, color = marks)) + 
+  geom_point() +
+  labs(title = "Simulated dependent LGCP", x = "X coordinate", y = "Y coordinate", color = "Point Type") +
+  theme_minimal()
+```
+
+```{r}
+res <- ARShift(data = X, i = "1", j = "2", n_perm = 499, workers = 5, type = "hom")
+res
+
+```
