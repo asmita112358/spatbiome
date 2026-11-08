@@ -20,16 +20,37 @@ pak::pak("asmita112358/spatbiome")
 #>  
 #> → Package library at '/Library/Frameworks/R.framework/Versions/4.6/Resources/library'.
 #> ℹ No downloads are needed
-#> ✔ 1 pkg + 40 deps: kept 40 [4.5s]
+#> ✔ 1 pkg + 40 deps: kept 40 [4.3s]
+library(spatbiome)
 ```
 
-## Generate data
+## Data generating functions and simulation scripts
 
-For more data generating functions, please refer to the `datagen.R`
-script in the `scripts` folder.
+The package includes the data-generating functions in scripts/datagen.R.
+To locate this script and the results_in_paper directory in your
+installed copy of spatbiome, run
 
 ``` r
-library(spatbiome)
+system.file("results_in_paper", package = "spatbiome")
+#> [1] "/Library/Frameworks/R.framework/Versions/4.6/Resources/library/spatbiome/results_in_paper"
+system.file("scripts", package = "spatbiome")
+#> [1] "/Library/Frameworks/R.framework/Versions/4.6/Resources/library/spatbiome/scripts"
+```
+
+These commands return the full paths to the files and directory. Open
+datagen.R in RStudio with:
+
+``` r
+file.edit(system.file("scripts", "datagen.R", package = "spatbiome"))
+```
+
+An example data generating function is provided below. The function
+`generate_LGCP` generates two Log Gaussian Cox Processes (LGCPs) in a
+specified window. The user can choose to generate independent point
+patterns or dependent point patterns where points of type 2 are placed
+close to points of type 1.
+
+``` r
 generate_LGCP <- function(win, corrfun = "exponential",mu = 5, scale = 0.1, dependant = FALSE){
 
   data1 <- spatstat.random::rLGCP(corrfun, mu = mu, win = win, scale = scale, var = 1)
@@ -72,25 +93,25 @@ ggplot(plot_X, aes(x = x, y = y, color = marks)) +
   theme_minimal()
 ```
 
-<img src="man/figures/README-unnamed-chunk-3-1.png" alt="" width="100%" />
+<img src="man/figures/README-unnamed-chunk-5-1.png" alt="" width="100%" />
 
 ``` r
 res <- ARShift(data = X, i = "1", j = "2", n_perm = 499, workers = 5, type = "hom")
 res
 #> $p
-#> [1] 0.694
+#> [1] 0.518
 #> 
 #> $K
-#>  [1] 0.000000e+00 0.000000e+00 4.773839e-05 2.386920e-04 4.296455e-04
-#>  [6] 7.638143e-04 1.050245e-03 1.432152e-03 1.599236e-03 2.178905e-03
-#> [11] 2.804990e-03 3.425377e-03 4.128397e-03 4.885784e-03 5.718792e-03
-#> [16] 6.414215e-03 7.083354e-03 7.831378e-03 9.117970e-03 1.029195e-02
-#> [21] 1.129907e-02 1.222730e-02 1.309367e-02 1.406929e-02 1.548456e-02
-#> [26] 1.639096e-02 1.755519e-02 1.892392e-02 2.034838e-02 2.184529e-02
-#> [31] 2.321219e-02 2.505392e-02 2.693658e-02 2.841749e-02 3.016747e-02
-#> [36] 3.190022e-02 3.366787e-02 3.559592e-02 3.741598e-02 3.956300e-02
-#> [41] 4.128973e-02 4.372040e-02 4.551378e-02 4.822375e-02 5.061581e-02
-#> [46] 5.246450e-02 5.426285e-02 5.668629e-02 5.856923e-02 6.090046e-02
+#>  [1] 0.000000e+00 3.702607e-05 1.295912e-04 2.406694e-04 3.948234e-04
+#>  [6] 7.280580e-04 9.872405e-04 1.283449e-03 1.686349e-03 2.014552e-03
+#> [11] 2.580149e-03 3.171922e-03 3.846875e-03 4.525279e-03 5.435653e-03
+#> [16] 6.266032e-03 7.386533e-03 8.271505e-03 9.435031e-03 1.041306e-02
+#> [21] 1.165767e-02 1.297108e-02 1.443229e-02 1.628515e-02 1.758996e-02
+#> [26] 1.905852e-02 2.018625e-02 2.154306e-02 2.306018e-02 2.487371e-02
+#> [31] 2.664522e-02 2.838744e-02 3.004947e-02 3.207292e-02 3.429941e-02
+#> [36] 3.613092e-02 3.794093e-02 4.025927e-02 4.247522e-02 4.464237e-02
+#> [41] 4.681722e-02 4.883006e-02 5.094687e-02 5.339222e-02 5.589468e-02
+#> [46] 5.851065e-02 6.136705e-02 6.432498e-02 6.668385e-02 6.963216e-02
 #> 
 #> $r
 #>  [1] 0.000000000 0.003061224 0.006122449 0.009183673 0.012244898 0.015306122
@@ -127,7 +148,7 @@ ggplot(plot_X, aes(x = x, y = y, color = marks)) +
   theme_minimal()
 ```
 
-<img src="man/figures/README-unnamed-chunk-5-1.png" alt="" width="100%" />
+<img src="man/figures/README-unnamed-chunk-7-1.png" alt="" width="100%" />
 
 ``` r
 res <- ARShift(data = X, i = "1", j = "2", n_perm = 499, workers = 5, type = "hom")
@@ -136,16 +157,16 @@ res
 #> [1] 0.002
 #> 
 #> $K
-#>  [1] 0.000000e+00 2.749859e-05 1.099944e-04 4.399775e-04 7.974591e-04
-#>  [6] 1.196189e-03 1.696169e-03 2.240969e-03 2.873437e-03 3.694999e-03
-#> [11] 4.689403e-03 5.569358e-03 6.753665e-03 8.029231e-03 9.257832e-03
-#> [16] 1.047336e-02 1.203045e-02 1.349970e-02 1.501302e-02 1.651756e-02
-#> [21] 1.831668e-02 2.005608e-02 2.236820e-02 2.451408e-02 2.653917e-02
-#> [26] 2.861694e-02 3.120772e-02 3.380867e-02 3.635325e-02 3.890814e-02
-#> [31] 4.177188e-02 4.467765e-02 4.754626e-02 5.043737e-02 5.314497e-02
-#> [36] 5.600311e-02 5.882405e-02 6.182120e-02 6.467815e-02 6.787635e-02
-#> [41] 7.140149e-02 7.431836e-02 7.763620e-02 8.095423e-02 8.445795e-02
-#> [46] 8.732106e-02 9.076588e-02 9.423711e-02 9.739393e-02 1.008919e-01
+#>  [1] 0.000000e+00 6.426322e-05 2.731187e-04 5.944348e-04 1.060343e-03
+#>  [6] 1.654778e-03 2.178408e-03 2.887907e-03 3.806873e-03 4.761770e-03
+#> [11] 5.673299e-03 6.792481e-03 7.901873e-03 9.467146e-03 1.117503e-02
+#> [16] 1.278648e-02 1.468525e-02 1.643385e-02 1.834201e-02 2.038201e-02
+#> [21] 2.248643e-02 2.449750e-02 2.665492e-02 2.887610e-02 3.156259e-02
+#> [26] 3.427074e-02 3.691579e-02 3.986143e-02 4.290812e-02 4.556909e-02
+#> [31] 4.840722e-02 5.152933e-02 5.479912e-02 5.797748e-02 6.090388e-02
+#> [36] 6.405428e-02 6.740900e-02 7.049741e-02 7.381396e-02 7.680292e-02
+#> [41] 7.999821e-02 8.342107e-02 8.716612e-02 9.049001e-02 9.401770e-02
+#> [46] 9.756456e-02 1.013892e-01 1.051079e-01 1.085411e-01 1.124066e-01
 #> 
 #> $r
 #>  [1] 0.000000000 0.003061224 0.006122449 0.009183673 0.012244898 0.015306122

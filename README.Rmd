@@ -25,12 +25,21 @@ You can install the development version of spatbiome from [GitHub](https://githu
 
 # Install a package from GitHub
 pak::pak("asmita112358/spatbiome")
-```
-## Generate data
-
-For more data generating functions, please refer to the `datagen.R` script in the `scripts` folder.
-```{r example}
 library(spatbiome)
+```
+## Data generating functions and simulation scripts
+
+The package includes the data-generating functions in scripts/datagen.R. To locate this script and the results_in_paper directory in your installed copy of spatbiome, run
+```{r}
+system.file("results_in_paper", package = "spatbiome")
+system.file("scripts", package = "spatbiome")
+```
+These commands return the full paths to the files and directory. Open datagen.R in RStudio with:
+```{r,eval = FALSE}
+file.edit(system.file("scripts", "datagen.R", package = "spatbiome"))
+```
+An example data generating function is provided below. The function `generate_LGCP` generates two Log Gaussian Cox Processes (LGCPs) in a specified window. The user can choose to generate independent point patterns or dependent point patterns where points of type 2 are placed close to points of type 1.
+```{r example}
 generate_LGCP <- function(win, corrfun = "exponential",mu = 5, scale = 0.1, dependant = FALSE){
 
   data1 <- spatstat.random::rLGCP(corrfun, mu = mu, win = win, scale = scale, var = 1)
